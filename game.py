@@ -4,12 +4,12 @@
 import numpy as np
 
 
-class Board(object):
+class Board:
     """board for the game"""
 
     def __init__(self, **kwargs):
-        self.width = int(kwargs.get('width', 8))
-        self.height = int(kwargs.get('height', 8))
+        self.width = int(kwargs.get('width', 10))
+        self.height = int(kwargs.get('height', 10))
         # board states stored as a dict,
         # key: move as location on the board,
         # value: player as pieces type
@@ -114,7 +114,7 @@ class Board(object):
         return self.current_player
 
 
-class Game(object):
+class Game:
     """game server"""
 
     def __init__(self, board, **kwargs):
@@ -172,14 +172,12 @@ class Game(object):
                 return winner
 
     def start_self_play(self, player, is_shown=0, temp=1e-3):
-        """ start a self-play game using a MCTS player, reuse the search tree,
-        and store the self-play data: (state, mcts_probs, z) for training
-        """
+        """ start a self-play game using a MCTS player, reuse the search tree, and store the self-play data: (state, mcts_probs, z) for training"""
         self.board.init_board()
         p1, p2 = self.board.players
         states, mcts_probs, current_players = [], [], []
         while True:
-            move, move_probs = player.get_action(self.board, temp=temp, return_prob=1)
+            move, move_probs = player.get_action(self.board, temp=temp, return_prob=True)
             # store the data
             states.append(self.board.current_state())
             mcts_probs.append(move_probs)

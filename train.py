@@ -16,20 +16,19 @@ class TrainPipeline():
     def __init__(self, init_model=None):
         ### params of the board and the game ###
         self.n_in_row = 5
-        self.board_width = 15
-        self.board_height = 15
+        self.board_width = 10
+        self.board_height = 10
         self.board = Board(width=self.board_width, height=self.board_height, n_in_row=self.n_in_row)
         self.game = Game(self.board)
         ###  training params ###
         self.learn_rate = 2e-3
         self.lr_multiplier = 1.0  # adaptively adjust the learning rate based on KL
         self.temp = 1.0  # the temperature param
-        self.n_playout = 400  # num of simulations for each move
+        self.n_playout = 800  # num of simulations for each move
         self.c_puct = 5
         self.batch_size = 512  # mini-batch size for training
         self.buffer_size = 10000
         self.data_buffer = deque(maxlen=self.buffer_size)
-        self.play_batch_size = 1
         self.epochs = 5  # num of train_steps for each update
         self.kl_targ = 0.02
         self.check_freq = 50
@@ -44,7 +43,7 @@ class TrainPipeline():
             # start training from a new policy-value net
             self.policy_value_net = PolicyValueNet(self.board_width, self.board_height)
 
-        self.mcts_player = MCTSPlayer(self.policy_value_net.policy_value_fn, c_puct=self.c_puct, n_playout=self.n_playout, is_selfplay=1)
+        self.mcts_player = MCTSPlayer(self.policy_value_net.policy_value_fn, c_puct=self.c_puct, n_playout=self.n_playout, is_selfplay=True)
 
     def get_equi_data(self, play_data):
         """augment the data set by rotation and flipping
@@ -63,15 +62,14 @@ class TrainPipeline():
                 extend_data.append((equi_state, np.flipud(equi_mcts_prob).flatten(), winner))
         return extend_data
 
-    def collect_selfplay_data(self, n_games=1):
+    def collect_selfplay_data(self):
         """collect self-play data for training"""
-        for i in range(n_games):
-            winner, play_data = self.game.start_self_play(self.mcts_player, temp=self.temp)
-            play_data = list(play_data)[:]
-            self.episode_len = len(play_data)
-            # augment the data
-            play_data = self.get_equi_data(play_data)
-            self.data_buffer.extend(play_data)
+        winner, play_data = self.game.start_self_play(self.mcts_player, temp=self.temp)
+        play_data = list(play_data)[:]
+        self.episode_len = len(play_data)
+        # augment the data
+        play_data = self.get_equi_data(play_data)
+        self.data_buffer.extend(play_data)
 
     def policy_update(self):
         """update the policy-value net"""
@@ -127,7 +125,7 @@ class TrainPipeline():
         """run the training pipeline"""
         try:
             for i in range(self.game_batch_num):
-                self.collect_selfplay_data(self.play_batch_size)
+                self.collect_selfplay_data()
                 print("batch i:{}, episode_len:{}".format(i+1, self.episode_len))
                 if len(self.data_buffer) > self.batch_size:
                     loss, entropy = self.policy_update()
@@ -136,13 +134,13 @@ class TrainPipeline():
                 if (i+1) % self.check_freq == 0:
                     print("current self-play batch: {}".format(i+1))
                     win_ratio = self.policy_evaluate()
-                    self.policy_value_net.save_model('./current_policy.model')
+                    # self.policy_value_net.save_model('./current_policy.model')
                     if win_ratio > self.best_win_ratio:
                         print("New best policy!!!!!!!!")
                         self.best_win_ratio = win_ratio
                         # update the best_policy
-                        self.policy_value_net.save_model('./best_policy.model')
-                        if (self.best_win_ratio == 1.0 and self.pure_mcts_playout_num < 5000):
+                        # self.policy_value_net.save_model('./best_policy.model')
+                        if self.best_win_ratio == 1.0 and self.pure_mcts_playout_num < 5000:
                             self.pure_mcts_playout_num += 1000
                             self.best_win_ratio = 0.0
         except KeyboardInterrupt:

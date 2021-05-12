@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "D:\\Anaconda3\\envs\\alphazero\\python.exe"
+    "python.pythonPath": "D:\\Anaconda3\\envs\\tf2_gpu\\python.exe",
+    "editor.fontSize": 15
 }

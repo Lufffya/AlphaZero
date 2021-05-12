@@ -4,17 +4,11 @@ import pickle
 from game import Board, Game
 from mcts_pure import MCTSPlayer as MCTS_Pure
 from mcts_alphaZero import MCTSPlayer
-from policy_value_net_numpy import PolicyValueNetNumpy
-# from policy_value_net import PolicyValueNet  # Theano and Lasagne
-# from policy_value_net_pytorch import PolicyValueNet  # Pytorch
-# from policy_value_net_tensorflow import PolicyValueNet # Tensorflow
-# from policy_value_net_keras import PolicyValueNet  # Keras
+from model import PolicyValueNet
 
 
 class Human(object):
-    """
-    human player
-    """
+    """human player"""
 
     def __init__(self):
         self.player = None
@@ -42,21 +36,14 @@ class Human(object):
 def run():
     n = 5
     width, height = 8, 8
-    model_file = 'best_policy_8_8_5.model'
+    model_file = 'model\\best_policy.model'
     try:
         board = Board(width=width, height=height, n_in_row=n)
         game = Game(board)
 
         # ############### human VS AI ###################
-        # load the trained policy_value_net in either Theano/Lasagne, PyTorch or TensorFlow
-
-        # best_policy = PolicyValueNet(width, height, model_file = model_file)
-        # mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=400)
-
-        # load the provided model (trained in Theano/Lasagne) into a MCTS player written in pure numpy
-        policy_param = pickle.load(open(model_file, 'rb'), encoding='bytes')
-        best_policy = PolicyValueNetNumpy(width, height, policy_param)
-        mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=400)  # set larger n_playout for better performance
+        best_policy = PolicyValueNet(width, height, model_file = model_file)
+        mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=800)
 
         # uncomment the following line to play with pure MCTS (it's much weaker even with a larger n_playout)
         # mcts_player = MCTS_Pure(c_puct=5, n_playout=1000)
