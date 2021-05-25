@@ -61,7 +61,7 @@ class TreeNode:
         # Count visit.
         self._n_visits += 1
         # Update Q, a running average of values for all visits.
-        self._Q += 1.0*(leaf_value - self._Q) / self._n_visits
+        self._Q += (leaf_value - self._Q) / self._n_visits
 
     def is_leaf(self):
         """Check if leaf node (i.e. no nodes below this have been expanded)"""

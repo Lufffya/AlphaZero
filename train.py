@@ -12,7 +12,7 @@ from mcts_alphaZero import MCTSPlayer
 from model import PolicyValueNet
 
 
-class TrainPipeline():
+class TrainPipeline:
     def __init__(self, init_model=None):
         ### params of the board and the game ###
         self.n_in_row = 5
